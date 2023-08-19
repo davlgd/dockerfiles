@@ -1,0 +1,22 @@
+FROM archlinux:latest
+
+ARG SSH_PUBLIC_KEY
+
+RUN pacman -Syu --noconfirm nano git openssh sudo bash-completion
+
+RUN useradd -m davlgd && \
+    passwd -de davlgd && \
+    ssh-keygen -A && \
+    mkdir -p /home/davlgd/.ssh && \
+    echo "$SSH_PUBLIC_KEY" > /home/davlgd/.ssh/authorized_keys && \
+    echo 'davlgd ALL=(ALL) ALL' >> /etc/sudoers && \
+    echo "alias fup='sudo pacman -Syu'" >> /home/davlgd/.bashrc && \
+    echo "alias i='sudo pacman -S'" >> /home/davlgd/.bashrc && \
+    echo "PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '" >> /home/davlgd/.bashrc && \
+    echo 'PermitRootLogin no' >> /etc/ssh/sshd_config && \
+    echo 'PasswordAuthentication no' >> /etc/ssh/sshd_config && \
+    chown -R davlgd:davlgd /home/davlgd/ && \
+    chmod 700 /home/davlgd/.ssh && \
+    chmod 600 /home/davlgd/.ssh/authorized_keys
+
+CMD ["/usr/sbin/sshd", "-D"]

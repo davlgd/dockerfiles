@@ -1,0 +1,26 @@
+FROM node:latest
+
+ARG SSH_PUBLIC_KEY
+
+RUN apt-get update && apt full-upgrade -y && \
+    apt-get install -y nano git openssh-server sudo bash-completion && \
+    npm i -g npm && npm i -g clever-tools
+
+RUN useradd -m davlgd --shell /usr/bin/bash && \
+    passwd -de davlgd && \
+    adduser davlgd sudo && \
+    ssh-keygen -A && \
+    mkdir -p /home/davlgd/.ssh && \
+    mkdir -p /run/sshd && \
+    mkdir -p /home/davlgd/.config && \
+    echo "$SSH_PUBLIC_KEY" > /home/davlgd/.ssh/authorized_keys && \
+    echo 'PermitRootLogin no' >> /etc/ssh/sshd_config && \
+    echo 'PasswordAuthentication no' >> /etc/ssh/sshd_config && \
+    echo "alias fup='sudo apt update && sudo apt full-upgrade -y'" >> /home/davlgd/.bashrc && \
+    echo "alias i='sudo apt install'" >> /home/davlgd/.bashrc && \
+    echo "PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '" >> /home/davlgd/.bashrc && \
+    chown -R davlgd:davlgd /home/davlgd/ && \
+    chmod 755 /run/sshd && \
+    chmod 700 /home/davlgd/.ssh && \
+    chmod 600 /home/davlgd/.ssh/authorized_keys
+CMD ["/usr/sbin/sshd", "-D"]
